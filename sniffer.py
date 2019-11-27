@@ -8,6 +8,7 @@ import time
 mac_list = []
 time_stamp_list = []
 
+"""Se encarga de limpiar la pantalla y dibujar el logo del programa."""
 def print_logo():
     os.system('clear')
     print "                                                                          "
@@ -20,10 +21,13 @@ def print_logo():
     print " M     M  M   M  M     M     A                A     C    C                "
     print " M     M    M    M     M    A    AAAAAAAAAA    A    C    C                "
     print " M     M         M     M   A    A          A    A   C    CCCCCCCCCCCCCCCC "
-    print " M     M         M     M  A    A            A    A  C  R E G I S T E R  C "
+    print " M     M         M     M  A    A            A    A  C                   C "
     print " MMMMMMM         MMMMMMM AAAAAA              AAAAAA CCCCCCCCCCCCCCCCCCCCC "
-    print "                                                                          "
+    print "                                                      R E G I S T E R     "
 
+""" Muestra una pantalla de espera correspondiente al tiempo que se esta sniffeando.
+pre: wait_time es numerico != null
+"""
 def waiter(wait_time):
     #CONST
     X = 0.5
@@ -48,8 +52,12 @@ def waiter(wait_time):
         if i==7:
             i = 0
             
-# Sniff packets during a certain time
-def mac_sniffer(st = 60):
+""" Sniffea paquetes de manera asincronica durante el tiempo st, el cual es 10 por defecto
+    y los almacena en la lista mac_list y el timestamp en time_stamp_list.
+pre: st es numerico
+post: Se tiene la listas mac_list y time_stamp_list cargadas con los dispositivos activos y su ultima aparicion respectivamente.
+"""
+def mac_sniffer(st = 10):
     IFACE = "mon0"
     SNIFF_TIME = st
     t = AsyncSniffer(iface=IFACE,prn=store_packets)
@@ -57,8 +65,15 @@ def mac_sniffer(st = 60):
     waiter(SNIFF_TIME)
     t.stop()
 
-#Stores no duplicates packets in array 
-# >>> packet : every packet sniffed
+""" Por cada paquete sniffeado analiza si se debe almacenar en la lista o no
+    >>packet.type == 0 -> Management frame
+        >>subtype == 8 -> Beacon
+    >>packet.type == 2 -> Data frame
+
+    >>packet.addr == ff:ff:ff:ff:ff:ff -> Broadcast
+    >>packet.addr1 -> La direccion MAC fuente
+    >>packet.addr2 -> La direccion MAC destino
+"""
 def store_packets(packet):
     if packet.haslayer(Dot11) :
         if packet.type == 0 and packet.subtype != 8:
@@ -98,7 +113,7 @@ def main():
             print_logo()
             mac = raw_input(" Ingrese la MAC a registrar\n")
             nombre =  raw_input(" Ingrese el nombre del cliente\n")
-            registro.agregar(mac, nombre)
+            registro.agregar(mac.lower(), nombre)
             print(" Se agrego correctamente\n")
         elif(accion=="e"):
             print_logo()
@@ -116,19 +131,24 @@ def main():
                 print("No se reconoce el metodo a eliminar, intente de nuevo")
         elif(accion=="m"):
             #macs= obtener las mac del aire
-            dur = raw_input("Inserte la duracion en segundos de la busqueda: \n")
-            mac_sniffer(int(dur))
+            #dur = raw_input("Inserte la duracion en segundos de la busqueda: \n")
+            act = raw_input("Mostrar solo clientes conocidos Y/N: \n")
+            mac_sniffer()
             print_logo()
             print(" [  Ultima vez Activo ] -        MAC        -    Nombre ")
             print " --------------------------------------------------------"
             print("")
-            registro.mostrarActivos(mac_list,time_stamp_list)
+            if act.upper() == "Y":
+                registro.mostrarActivos(mac_list,time_stamp_list,True)
+            else:
+                registro.mostrarActivos(mac_list,time_stamp_list,False)
             raw_input("Presione Enter para continuar...")
         else:
             print(" No se reconoce la accion\n")
         print_logo()
         accion = raw_input(" Presione:\n a: Agregar un cliente\n e: Eliminar un cliente\n m: Mostrar las MACs activas\n f: Finalizar\n")
-
+    if accion == "f":
+        os.system("clear")
 
 
 main()
