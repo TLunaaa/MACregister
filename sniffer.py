@@ -1,5 +1,6 @@
 from scapy.all import AsyncSniffer,sniff
 from scapy.layers.dot11 import Dot11
+import registro
 import os
 import time
 
@@ -73,8 +74,37 @@ def show_sniffed():
 
 def main():
     print_logo()
-    mac_sniffer(10)
-    show_sniffed()
+    f = open("archivoMac.txt","a")
+    f.close()
+    accion = raw_input(" Presione:\n a: Agregar un cliente\n e: Eliminar un cliente\n m: Mostrar las MACs activas\n f: Finalizar\n")
+    while(accion!="f"):
+        if(accion=="a"):
+            mac = raw_input("Ingrese la mac a registrar\n")
+            nombre =  raw_input("Ingrese el nombre del cliente\n")
+            registro.agregar(mac, nombre)
+            print("Se agrego correctamente\n")
+        elif(accion=="e"):
+            modo = raw_input("Como desea eliminar?\nn: Por nombre\nm: Por MAC\n")
+            if(modo == "n"):
+                nombre = raw_input("Ingrese el nombre del cliente a eliminar\n")
+                nombre+="\n"
+                registro.eliminarNombre(nombre)
+                print("Se elimino correctamente\n")
+            elif(modo == "m"):
+                mac = raw_input("Ingrese la MAC del cliente a eliminar\n")
+                registro.eliminarMac(mac)
+                print("Se elimino correctamente\n")
+            else:
+                print("No se reconoce el metodo a eliminar, intente de nuevo")
+        elif(accion=="m"):
+            #macs= obtener las mac del aire
+            mac_sniffer(60)
+            registro.mostrarActivos(mac_list)
+        else:
+            print("No se reconoce la accion\n")
+        accion = raw_input(" Presione:\n a: Agregar un cliente\n e: Eliminar un cliente\n m: Mostrar las MACs activas\n f: Finalizar\n")
+
+    #show_sniffed()
 
 
 main()
