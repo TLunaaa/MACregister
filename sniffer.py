@@ -1,10 +1,12 @@
 from scapy.all import AsyncSniffer,sniff
 from scapy.layers.dot11 import Dot11
+from datetime import datetime
 import registro
 import os
 import time
 
 mac_list = []
+time_stamp_list = []
 
 def print_logo():
     os.system('clear')
@@ -26,13 +28,13 @@ def waiter(wait_time):
     #CONST
     X = 0.5
     WAIT_TEXT = []
-    WAIT_TEXT.append(" Sniffing packets      ")
-    WAIT_TEXT.append(" Sniffing packets #    ")
-    WAIT_TEXT.append(" Sniffing packets ##   ")
-    WAIT_TEXT.append(" Sniffing packets ###  ")
-    WAIT_TEXT.append(" Sniffing packets #### ")
-    WAIT_TEXT.append(" Sniffing packets #####")
-    WAIT_TEXT.append(" Sniffing packets ######")
+    WAIT_TEXT.append(" Buscando MACs       ")
+    WAIT_TEXT.append(" Buscando MACs #     ")
+    WAIT_TEXT.append(" Buscando MACs ##    ")
+    WAIT_TEXT.append(" Buscando MACs ###   ")
+    WAIT_TEXT.append(" Buscando MACs ####  ")
+    WAIT_TEXT.append(" Buscando MACs ##### ")
+    WAIT_TEXT.append(" Buscando MACs ######")
     #VARIABLES
     i = 0
     total_time = wait_time
@@ -59,18 +61,32 @@ def mac_sniffer(st = 60):
 # >>> packet : every packet sniffed
 def store_packets(packet):
     if packet.haslayer(Dot11) :
-        if packet.type == 0 and packet.subtype == 4: #subtype = Probe Request
-            if packet.addr2 not in mac_list:         #addr2 = Sender MAC address
-                mac_list.append(packet.addr2)
-        if packet.type == 0 and packet.subtype == 5: #subtype = Probe Response
-            if packet.addr1 not in mac_list:         #addr1 = Reciever MAC address
-                mac_list.append(packet.addr1)
-
-def show_sniffed():
-    print_logo()
-    print " ##Devices MAC addresses##"
-    for x in range(len(mac_list)):
-        print (" MAC %d %s" %(x,mac_list[x]))
+        if packet.type == 0 and packet.subtype != 8:
+            if packet.addr1 != "ff:ff:ff:ff:ff:ff":
+                if packet.addr1 not in mac_list:         
+                    mac_list.append(packet.addr1)
+                    time_stamp_list.append(datetime.now())
+                else:
+                    time_stamp_list[mac_list.index(packet.addr1)] = datetime.now()
+            if packet.addr2 != "ff:ff:ff:ff:ff:ff":
+                if packet.addr2 not in mac_list:         
+                    mac_list.append(packet.addr2)
+                    time_stamp_list.append(datetime.now())
+                else:
+                    time_stamp_list[mac_list.index(packet.addr2)] = datetime.now()
+        if packet.type == 2 :
+            if packet.addr1 != "ff:ff:ff:ff:ff:ff":
+                if packet.addr1 not in mac_list:         
+                    mac_list.append(packet.addr1)
+                    time_stamp_list.append(datetime.now())
+                else:
+                    time_stamp_list[mac_list.index(packet.addr1)] = datetime.now()
+            if packet.addr2 != "ff:ff:ff:ff:ff:ff":
+                if packet.addr2 not in mac_list:         
+                    mac_list.append(packet.addr2)
+                    time_stamp_list.append(datetime.now())
+                else:
+                    time_stamp_list[mac_list.index(packet.addr2)] = datetime.now()
 
 def main():
     print_logo()
@@ -79,11 +95,13 @@ def main():
     accion = raw_input(" Presione:\n a: Agregar un cliente\n e: Eliminar un cliente\n m: Mostrar las MACs activas\n f: Finalizar\n")
     while(accion!="f"):
         if(accion=="a"):
-            mac = raw_input("Ingrese la mac a registrar\n")
-            nombre =  raw_input("Ingrese el nombre del cliente\n")
+            print_logo()
+            mac = raw_input(" Ingrese la MAC a registrar\n")
+            nombre =  raw_input(" Ingrese el nombre del cliente\n")
             registro.agregar(mac, nombre)
-            print("Se agrego correctamente\n")
+            print(" Se agrego correctamente\n")
         elif(accion=="e"):
+            print_logo()
             modo = raw_input("Como desea eliminar?\nn: Por nombre\nm: Por MAC\n")
             if(modo == "n"):
                 nombre = raw_input("Ingrese el nombre del cliente a eliminar\n")
@@ -98,13 +116,19 @@ def main():
                 print("No se reconoce el metodo a eliminar, intente de nuevo")
         elif(accion=="m"):
             #macs= obtener las mac del aire
-            mac_sniffer(60)
-            registro.mostrarActivos(mac_list)
+            dur = raw_input("Inserte la duracion en segundos de la busqueda: \n")
+            mac_sniffer(int(dur))
+            print_logo()
+            print(" [  Ultima vez Activo ] -        MAC        -    Nombre ")
+            print " --------------------------------------------------------"
+            print("")
+            registro.mostrarActivos(mac_list,time_stamp_list)
+            raw_input("Presione Enter para continuar...")
         else:
-            print("No se reconoce la accion\n")
+            print(" No se reconoce la accion\n")
+        print_logo()
         accion = raw_input(" Presione:\n a: Agregar un cliente\n e: Eliminar un cliente\n m: Mostrar las MACs activas\n f: Finalizar\n")
 
-    #show_sniffed()
 
 
 main()

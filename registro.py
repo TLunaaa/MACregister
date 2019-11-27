@@ -115,12 +115,13 @@ def obtenerMac(nombre):
 pre: macs es un arreglo de las macs que se encuentran activas != null
 post: imprime por pantalla las macs activas con su nombre"""
 
-def mostrarActivos(macs):
+def mostrarActivos(macs,ts):
     for i in range(0, len(macs)):
         try:
+            timestampStr = ts[i].strftime("%d-%b-%Y %H:%M:%S")
             nombre = obtenerNombre(macs[i])
-            print(str(i) +": "+macs[i]+"-"+nombre)
+            print(" ["+ timestampStr +"] - "+macs[i]+" - "+nombre + " " )
         except Exception:
-            print(str(i) +": "+macs[i]+"-Desconocido\n")
+            print(" ["+ timestampStr +"] - "+macs[i]+" - Desconocido\n")
 
     
